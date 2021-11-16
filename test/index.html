@@ -11,8 +11,10 @@
     <script>
         let canvas = document.querySelector('canvas')
         let ctx = canvas.getContext('2d')
-        let webgl = canvas.getContext("webgl")
-        alert(ctx,webgl)
+        ctx.moveTo(0,0)
+        ctx.lineTo(canvas.width,canvas.height)
+        ctx.lineWidth = 6
+        ctx.strokeStyle = 'red'
     </script>
 </body>
 </html>
