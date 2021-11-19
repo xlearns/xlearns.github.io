@@ -1,175 +1,60 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-	<title></title>
-	<style>
-		*{
-			padding: 0; 
-			margin: 0
-		}
-		canvas{
-			box-sizing: border-box;
-			border:1px solid;
-		}
-	</style>
-	<script src='./pixi.min.js'></script>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <style>
+    #app{
+      margin: 0;
+      padding: 0;
+      height:100vh;
+    }
+    canvas{
+      margin: 0;
+      padding: 0;
+    }
+  </style>
+  <script>
+    let m_offset = {}
+  </script>
+  <script src='./assets//格斗家/_.js'></script>
+  <script src='./js/pixi.min.js'></script>
 </head>
 <body>
-<script type="text/javascript">
-//Aliases
-let Application = PIXI.Application,
-    Container = PIXI.Container,
-    loader = PIXI.loader,
-    resources = PIXI.loader.resources,
-    Graphics = PIXI.Graphics,
-    TextureCache = PIXI.utils.TextureCache,
-    Sprite = PIXI.Sprite,
-    Text = PIXI.Text,
-    TextStyle = PIXI.TextStyle;
-
-//Create a Pixi Application
-let app = new Application({ 
-    width: 640, 
-    height: 480,                       
-    antialiasing: true, 
-    transparent: false, 
-    resolution: 1
+<div id="app"></div>
+<script>
+let el = document.querySelector('#app')
+let width = el.offsetWidth
+let height = el.offsetHeight
+let m_center = { x: -255, y: -380 }
+let app = new PIXI.Application({ 
+    width: 800,         // default: 800 宽度
+    height: 600,        // default: 600 高度
+    antialias: true,    // default: false 反锯齿
+    transparent: false, // default: false 透明度
+    resolution: 1       // default: 1 分辨率
   }
 );
-document.body.appendChild(app.view);
-//过场动画
-let alvinImage = './images/alvin.png'
-let huttonImage = './images/hutton.png'
-let westImage = './images/west.png'
-let snowImage = './images/snow.png'
-let diabloImage = './images/diablo.png'
-//鬼剑士行为
-let stand = "./images/站立.png";
-let walk = "./images/步行.png";
-let run = "./images/奔跑.png";
-let attack1 = "./images/攻击1.png";
-let attack2 = "./images/攻击2.png";
-let attack3 = "./images/攻击3.png";
-let jump = "./images/跳跃.png";
-PIXI.loader.add([
-				alvinImage,
-				huttonImage,
-				westImage,
-				snowImage,
-				diabloImage,
-				stand,
-				walk,
-				run,
-				attack1,
-				attack2,
-				attack3,
-				jump
-]).on("progress", loadProgressHandler).load(setup);
-//加载进度
-function loadProgressHandler(loader, resource) {
-	var load = loader.progress
-  	console.log(load+"%")
+el.appendChild(app.view);
+let textureArr = []
+Array.from({length:m_offset["格斗家"].length}).forEach((val,key)=>{
+  textureArr.push('./assets/格斗家/'+Number(key+1)+'.png')
+})
+//加载资源
+PIXI.loader
+  .add(textureArr)
+  .load(setup);
+
+//开始
+function setup(){
+  let sprite = new PIXI.Sprite(
+  PIXI.loader.resources["./assets/格斗家/2.png"].texture
+);
+   app.stage.addChild(sprite);
 }
-//加载成功
-function setup() {
-   console.log("加载成功")
-  //主窗口 
-  gameScene = new Container();
-  //过度
-  loadingScene = new Container();
-  //艾尔文
-  alvinScene = new Container();
-  //赫顿马尔
-  huttonScene = new Container();	
-  //西海岸
-  westScene= new Container();
-  //斯顿雪域
-  snowScene = new Container();
-  //暗黑城
-  diabloScene = new Container();
-  app.stage.addChild(gameScene);
-  app.stage.addChild(loadingScene);
-  app.stage.addChild(alvinScene);
-  app.stage.addChild(huttonScene);
-  app.stage.addChild(westScene);
-  app.stage.addChild(snowScene);
-  app.stage.addChild(diabloScene);
-  gameScene.visible = false;
-  alvinScene.visible = false;
-  huttonScene.visible = false;
-  westScene.visible = false;
-  snowScene.visible = false;
-  diabloScene.visible = false;
-  let message,message1,message2,message3,message4,message5; 
-  let style = new TextStyle({
-    fontFamily: "Futura",
-    fontSize: 64,
-    fill: "white"
-  }); 
-  message = new Text("艾尔文防线", style);
-  message.x = 300;
-  message.y = 300-32;
 
-  message1 = new Text("赫顿马尔", style);
-  message1.x = 300;
-  message1.y = 300-32;
-
-  message2 = new Text("暗黑城", style);
-  message2.x = 300;
-  message2.y = 300-32;
-
-  message3 = new Text("西海岸", style);
-  message3.x = 300;
-  message3.y = 300-32;
-
-  message4 = new Text("斯顿雪域", style);
-  message4.x = 300;
-  message4.y = 300-32;
-
-  message5 = new Text("赛利亚旅店", style);
-  message5.x = 300;
-  message5.y = 300-32;
-  
-  // let alvin = new PIXI.Sprite(PIXI.loader.resources[alvinImage].texture);
-  // let hutton = new PIXI.Sprite(PIXI.loader.resources[huttonImage].texture);
-  // let west = new PIXI.Sprite(PIXI.loader.resources[westImage].texture);
-  // let snow = new PIXI.Sprite(PIXI.loader.resources[snowImage].texture);
-  // let diablo = new PIXI.Sprite(PIXI.loader.resources[diabloImage].texture);
-
-  // alvin.width=640;
-  // alvin.height=480;
-  // gameScene.addChild(message1);
-  // alvinScene.addChild(alvin);
-  // huttonScene.addChild(hutton);
-  // westScene.addChild(west);
-  // snowScene.addChild(snow);
-  // diabloScene.addChild(diablo);
-  
-  function loading(obj,url){
-  		var o  = new PIXI.Sprite(PIXI.loader.resources[url].texture);
-  		obj.visible = true;	
-  		obj.addChild(o);
- 		setTimeout(function(){
- 			obj.visible = false;
- 		},5000)
-  }	
-  var i = 0
-  var arr = [gameScene,alvinScene,huttonScene,westScene,snowScene,diabloScene];
-  var arrImage = [alvinImage,huttonImage,westImage,snowImage,diabloImage,alvinImage];
-  window.addEventListener('click',function(e){
-  	if(i>=arr.length-1){
-  		i=0
-  	}else{
-  		i++
-  	}
-  	for(var j=0,l=arr.length;j<l;j++){
-  		arr[j].visible = false;
-  	}
-  	// arr[i].visible = true;
-  	loading(arr[i],arrImage[i])
-  })
-
-} 
 </script>
 </body>
 </html>
