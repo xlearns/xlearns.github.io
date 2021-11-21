@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <style>
+      canvas,
+      body,
+      html {
+        margin: 0;
+        padding: 0;
+      }
+    </style>
+    <script>
+      let m_offset = {};
+    </script>
+    <script src="./../pixi/assets/格斗家/_.js"></script>
+    <script src="./js/phaser.min.js"></script>
+  </head>
+  <body>
+    <script>
+      let config = {
+        type: Phaser.AUTO,
+        width: 800,
+        height: 600,
+        antialias: false,
+        physics: {
+          default: "arcade",
+          arcade: {
+            debug: true,
+          },
+        },
+        scene: {
+          preload: preload,
+          create: create,
+          update: update,
+        },
+      };
+      let game = new Phaser.Game(config);
+      let hero = null;
+      //中心点
+      let m_center = { x: -255, y: -380 };
+      let x = 400;
+      let y = 300;
+      function preload() {
+        for (let i = 1; i <= m_offset["格斗家"].length; i++) {
+          this.load.image(`格斗家${i}`, "./assets/格斗家/" + i + ".png");
+        }
+      }
+      let walk = Array.from({ length: 161 }).map((v, i) => {
+        return { key: `格斗家${i + 1}` };
+      });
+      function create() {
+        this.anims.create({
+          key: "walk",
+          frames: walk,
+          repeat: -1,
+          frameRate: 10,
+        });
+        hero = this.add.sprite(0, 0, "格斗家1", 0);
+        hero.setOrigin(0, 0);
+        hero.on("animationstart", (a, b, c) => {
+          let { index } = b;
+          c.x = m_center.x + Number(m_offset["格斗家"][index - 1][0]) + x;
+          c.y = m_center.y + Number(m_offset["格斗家"][index - 1][1]) + y;
+        });
+        hero.on("animationupdate", (a, b, c) => {
+          let { index } = b;
+          c.x = m_center.x + Number(m_offset["格斗家"][index - 1][0]) + x;
+          c.y = m_center.y + Number(m_offset["格斗家"][index - 1][1]) + y;
+        });
+        hero.anims.play("walk");
+      }
+      function update() {}
+      //屏幕适配
+      window.addEventListener("resize", () => {
+        game.scale.resize(window.innerWidth, window.innerHeight);
+      });
+    </script>
+  </body>
+</html>
