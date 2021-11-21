@@ -16,7 +16,7 @@
     <script>
       let m_offset = {};
     </script>
-    <script src="./../pixi/assets/格斗家/r.js"></script>
+    <script src="./../pixijs/assets/格斗家/r.js"></script>
     <script src="./js/phaser.min.js"></script>
   </head>
   <body>
@@ -46,7 +46,7 @@
       let y = 300;
       function preload() {
         for (let i = 1; i <= m_offset["格斗家"].length; i++) {
-          this.load.image(`格斗家${i}`, "./assets/格斗家/" + i + ".png");
+          this.load.image(`格斗家${i}`, "./../pixijs/assets/格斗家/" + i + ".png");
         }
       }
       let walk = Array.from({ length: 161 }).map((v, i) => {
