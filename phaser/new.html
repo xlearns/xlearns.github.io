@@ -59,23 +59,59 @@
       let attack1 = [];
       let attack2 = [];
       let attack3 = [];
-      for (let i = 6; i <= 7; i++) {
+      let attack4 = [];
+      let idle = [];
+      for (let i = 137; i <= 144; i++) {
         walk.push({ key: `格斗家${i}` });
       }
-      for (let i = 11; i <= 17; i++) {
+      for (let i = 6; i <= 7; i++) {
         attack1.push({ key: `格斗家${i}` });
       }
-      for (let i = 22; i <= 29; i++) {
+      for (let i = 11; i <= 17; i++) {
         attack2.push({ key: `格斗家${i}` });
       }
-      for (let i = 30; i <= 36; i++) {
+      for (let i = 22; i <= 29; i++) {
         attack3.push({ key: `格斗家${i}` });
       }
-
+      for (let i = 30; i <= 36; i++) {
+        attack4.push({ key: `格斗家${i}` });
+      }
+      for (let i = 114; i <= 117; i++) {
+        idle.push({ key: `格斗家${i}` });
+      }
       function create() {
         this.anims.create({
           key: "walk",
           frames: walk,
+          repeat: -1,
+          frameRate: 15,
+        });
+        this.anims.create({
+          key: "idle",
+          frames: idle,
+          frameRate: 10,
+        });
+        this.anims.create({
+          key: "attack1",
+          frames: attack1,
+          repeat: -1,
+          frameRate: 15,
+        });
+        this.anims.create({
+          key: "attack2",
+          frames: attack2,
+          repeat: -1,
+          frameRate: 15,
+        });
+        this.anims.create({
+          key: "attack3",
+          frames: attack3,
+          repeat: -1,
+          frameRate: 15,
+        });
+        this.anims.create({
+          key: "attack4",
+          frames: attack4,
           repeat: -1,
           frameRate: 15,
         });
@@ -86,48 +122,47 @@
           let { width, height, x } = c;
           hero.body.width = width;
           hero.body.height = height;
-          hero.setOrigin(state.direction > 0 ? 0 : 1, 0);
-          c.frame.x =
-            Number(m_offset["格斗家"][index - 1][0]) + m_center.x;
+          hero.setOrigin(direction > 0 ? 0 : 1, 0);
+          c.frame.x = Number(m_offset["格斗家"][index - 1][0]) + m_center.x;
           c.frame.y = Number(m_offset["格斗家"][index - 1][1]) + m_center.y;
-          hero.setOffset(
-            state.direction > 0 ? c.frame.x : c.frame.x+width ,
-            c.frame.y
-          );
+          hero.setOffset(direction * c.frame.x, c.frame.y);
         });
         hero.on("animationupdate", (a, b, c) => {
-          hero.setOrigin(state.direction > 0 ? 0 : 1, 0);
+          hero.setOrigin(direction > 0 ? 0 : 1, 0);
           let { textureKey } = b;
           let index = Number(textureKey.match(/\d/g).join(""));
           let { width, height, x } = c;
           hero.body.width = width;
           hero.body.height = height;
-          c.frame.x =
-            Number(m_offset["格斗家"][index - 1][0]) + m_center.x;
+          c.frame.x = Number(m_offset["格斗家"][index - 1][0]) + m_center.x;
           c.frame.y = Number(m_offset["格斗家"][index - 1][1]) + m_center.y;
-          hero.setOffset(
-            state.direction > 0 ? c.frame.x : c.frame.x + width,
-            c.frame.y
-          );
+          hero.setOffset(direction * c.frame.x, c.frame.y);
         });
-        if (state.direction > 0) {
-          hero.flipX = false;
+        if (direction > 0) {
+          hero.setFlipX(false);
         } else {
-          hero.flipX = true;
+          hero.setFlipX(true);
         }
-        hero.anims.play("walk");
+        hero.anims.play("idle");
+        cursors = this.input.keyboard.createCursorKeys();
       }
-      function update() {}
 
-      //effect
-      effect(()=>{
-        console.log('ok')
-        if (state.direction > 0) {
-          hero.flipX = false;
+      function update() {
+        if (cursors.left.isDown) {
+          direction = -1;
+          hero.setVelocityX(-200);
+          hero.setFlipX(true);
+          hero.anims.play("walk", true);
+        } else if (cursors.right.isDown) {
+          direction = 1;
+          hero.setVelocityX(200);
+          hero.setFlipX(false);
+          hero.anims.play("walk", true);
         } else {
-          hero.flipX = true;
+          hero.setVelocityX(0);
+          hero.anims.play("idle", true);
         }
-      })
+      }
       //屏幕适配
       window.addEventListener("resize", () => {
         game.scale.resize(window.innerWidth, window.innerHeight);
