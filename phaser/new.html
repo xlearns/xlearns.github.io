@@ -46,10 +46,8 @@
       let x = 400;
       let y = 300;
       //方向
-      // let direction = -1;
-      let state = reactive({
-        direction:1
-      })
+      let direction = 1;
+
       function preload() {
         for (let i = 1; i <= m_offset["格斗家"].length; i++) {
           this.load.image(`格斗家${i}`, "./../pixijs/assets/格斗家/" + i + ".png");
