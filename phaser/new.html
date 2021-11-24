@@ -47,7 +47,8 @@
       let y = 300;
       //方向
       let direction = 1;
-
+      //连击
+      let combo = 0
       function preload() {
         for (let i = 1; i <= m_offset["格斗家"].length; i++) {
           this.load.image(`格斗家${i}`, "./../pixijs/assets/格斗家/" + i + ".png");
@@ -143,6 +144,7 @@
         }
         hero.anims.play("idle");
         cursors = this.input.keyboard.createCursorKeys();
+        keyX = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.X);
       }
 
       function update() {
@@ -156,7 +158,11 @@
           hero.setVelocityX(200);
           hero.setFlipX(false);
           hero.anims.play("walk", true);
-        } else {
+        } else if (keyX.isDown) {
+//           combo++%4
+          state = "attack1";
+          hero.anims.play("attack1", true);
+        }else {
           hero.setVelocityX(0);
           hero.anims.play("idle", true);
         }
