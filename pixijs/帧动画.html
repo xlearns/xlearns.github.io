@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <style>
+      #app {
+        margin: 0;
+        padding: 0;
+        height: 100vh;
+      }
+      canvas {
+        margin: 0;
+        padding: 0;
+      }
+    </style>
+    <script>
+      let m_offset = {};
+    </script>
+    <script src="./assets/格斗家/r.js"></script>
+    <script src="./js/pixi.min.js"></script>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script>
+      //文档： https://pixijs.download/release/docs/index.html
+      //https://segmentfault.com/a/1190000017877760
+      //中文文档： https://pixijs.huashengweilai.com/guide/start/15.collision-detection.html#hittestrectangle%E5%87%BD%E6%95%B0
+      let el = document.querySelector("#app");
+      let width = el.offsetWidth;
+      let height = el.offsetHeight;
+      let x = 400;
+      let y = 300;
+      //中心点
+      let m_center = { x: -255, y: -380 };
+      let app = new PIXI.Application({
+        width: 800, // default: 800 宽度
+        height: 600, // default: 600 高度
+        antialias: true, // default: false 反锯齿
+        transparent: false, // default: false 透明度
+        resolution: 1, // default: 1 分辨率
+      });
+      el.appendChild(app.view);
+      let textureArray = [];
+      for (let i = 1; i <= m_offset["格斗家"].length; i++) {
+        let temspr = PIXI.Texture.from("./assets/格斗家/" + i + ".png");
+        textureArray.push(temspr);
+      }
+      let sprite = new PIXI.AnimatedSprite(textureArray);
+      //第一帧
+      sprite.x = m_center.x + Number(m_offset["格斗家"][1][0]) + x;
+      sprite.y = m_center.y + Number(m_offset["格斗家"][1][1]) + y;
+      sprite.animationSpeed = 0.15;
+      sprite.onFrameChange = function (i) {
+        sprite.x = m_center.x + Number(m_offset["格斗家"][i][0]) + x;
+        sprite.y = m_center.y + Number(m_offset["格斗家"][i][1]) + y;
+      };
+      sprite.loop = true;
+      sprite.play();
+      app.stage.addChild(sprite);
+    </script>
+  </body>
+</html>
