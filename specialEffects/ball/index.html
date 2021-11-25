@@ -1,14 +1,202 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-    <script src='./js/three.js'></script>
+  <meta charset="UTF-8">
+  <title>ball</title>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      height:100vh;
+      min-width: 1200px;
+      min-height: 600px;
+    }
+    .ball{
+      width:100vw;
+      height:100vh;
+      margin:0 auto;
+    }
+    input{
+      border-radius: 15px;
+      outline: none;
+      height: 50px;
+      border:none;
+      position: absolute;
+    }
+  </style>
+  <script src="./js/three.js"></script>
+  <script src='./js/tween.min.js'></script>
+  <script src="./js/OrbitControls.js"></script>
 </head>
+
 <body>
-    <div class="app"></div>
-    <script></script>
+  <input type="text">
+  <div class='ball'></div>
+  <script>
+    var scene = new THREE.Scene();
+    var point = new THREE.PointLight(0xffffff);
+    point.position.set(400, 200, 300);
+    var ambient = new THREE.AmbientLight(0x444444);
+    scene.add(ambient);
+    let max = 160
+    let seach_stop = false;
+    var data = []
+    Array.from({length:max}).map((v,i)=>{
+      data.push({
+        name :'hello world'+i
+      })
+    })
+    var width = document.querySelector('.ball').offsetWidth; //窗口宽度
+    var height =  document.querySelector('.ball').offsetHeight; //窗口高度
+    camera = new THREE.PerspectiveCamera( 40, document.querySelector('.ball').offsetWidth / document.querySelector('.ball').offsetHeight, 1, 10000 );
+		var raycaster = new THREE.Raycaster();
+    var mouse = new THREE.Vector2();
+    camera.position.set(0, 0, 3000);
+    function onMouseClick(event){
+      //点击
+      let canvas = document.querySelector('.ball')
+      event.preventDefault();
+      mouse.x = ((event.clientX - canvas.getBoundingClientRect().left) / canvas.offsetWidth) *2-1;
+      mouse.y = -((event.clientY - canvas.getBoundingClientRect().top) / canvas.offsetHeight) *2+1
+      // 获取raycaster直线和所有模型相交的数组集合
+      raycaster.setFromCamera(mouse, camera);
+      var intersects = raycaster.intersectObjects(scene.children[1].children);
+      if(intersects.length>0){
+        alert(intersects[0].object.name)
+      }
+    }
+
+    function createS (i){
+        function makeTextCanvas(text, width, height) {
+          var canvas = document.createElement("canvas");
+          canvas.width = width;
+          canvas.height = height;
+          var c = canvas.getContext("2d");
+          c.clearRect(0, 0, c.canvas.width, c.canvas.height);
+          c.beginPath();
+          c.translate(width/2,height/2);
+          c.fillStyle = "#ffffff"; 
+          c.font = "48px Arial"; 
+          c.textBaseline = "middle"; 
+          c.textAlign = "center"; 
+          c.fillText(text, 0, 0);
+          return c.canvas;
+        }
+        var textCanvas = makeTextCanvas(data[i]&&data[i].name?data[i].name:'*', 320, 80);
+        var texture = new THREE.CanvasTexture(textCanvas);
+        texture.generateMipmaps = false;
+        texture.minFilter = THREE.LinearFilter;
+        texture.magFilter = THREE.LinearFilter;
+        let pinMaterial = new THREE.SpriteMaterial({
+          map: texture,
+        
+        });
+        let mesh= new THREE.Sprite(pinMaterial);
+        mesh.name = data[i]&&data[i].name?data[i].name:'*'
+        return mesh
+        
+    }
+
+    let group = new THREE.Group();
+    for ( var i = 0, l = max; i < l; i ++ ) {
+      var phi = Math.acos( - 1 + ( 2 * i ) / l );
+      var theta = Math.sqrt( l * Math.PI ) * phi;
+      var sprite = createS(i)
+      sprite.scale.set(160, 40, 1);
+      sprite.position.setFromSphericalCoords( 800, phi, theta )
+      group.add(sprite);
+    }
+
+    scene.add(group);
+    var renderer = new THREE.WebGLRenderer({
+      antialias: true
+    });
+    renderer.setSize(width, height);
+    renderer.shadowMap.enabled = false;
+    renderer.setPixelRatio(window.devicePixelRatio);
+    document.querySelector('.ball').appendChild(renderer.domElement);
+    renderer.render(scene, camera);
+    var controls = new THREE.OrbitControls(camera,renderer.domElement);
+    function render() {
+      renderer.render(scene,camera);
+      if(!seach_stop){
+        group.rotateY(-0.001);
+        group.rotateX(0.001)
+      }
+      controls.update()
+      TWEEN.update();
+      requestAnimationFrame(render);
+    }
+    render();
+    function search(e){
+        let value = document.querySelector('input').value 
+        if(e.keyCode==13&&value){
+          if (
+          data.every(v => {
+            return v.name != value;
+          })
+          ) {
+            return alert("没找到当前数据！");
+          }
+          seach_stop = true;
+          let arr = [] ;
+          scene.traverse((obj, i) => {
+            if (obj.name) {
+              obj.material && obj.material.color.set(0xffffff);
+              obj.scale.set && obj.scale.set(160, 40, 1);
+            }
+          });
+          scene.traverse((obj, i) => {
+            if (obj.name) {
+              if (obj.name == value) {
+                arr.push(obj.position);
+                obj.material && obj.material.color.set(0xffdd00);
+                obj.scale.set && obj.scale.set(320, 160, 1);
+              }
+            }
+			});
+      if (arr.length <= 0) {
+            arr = [];
+            seach_stop = false;
+            return alert("没找到当前数据！");
+			}
+      let { x, y, z } = arr[0];
+			group.rotation.set(0, 0, 0);
+  
+			let tween = new TWEEN.Tween({
+				px: camera.position.x,
+				py: camera.position.y,
+				pz: camera.position.z,
+			});
+			tween.to(
+				{
+					px: x,
+					py: y,
+					pz: z,
+				},
+				1000
+			);
+			tween.onUpdate(function () {
+				camera.position.set(this.px, this.py, this.pz);
+				camera.lookAt(0, 0, 0);
+				camera.translateZ(1000);
+			});
+			tween.easing(TWEEN.Easing.Cubic.InOut);
+			tween.start();
+     }
+    }
+    
+    //点击事件
+    document.querySelector('.ball').addEventListener( 'click', onMouseClick, false );
+    document.querySelector('input').addEventListener('keyup',search) 
+    //监听屏幕大小改变
+    window.addEventListener( 'resize', onResize );
+    function onResize(v){
+        width = window.innerWidth
+        height = window.innerHeight
+        renderer.setSize(width, height)
+      }
+  </script>
 </body>
 </html>
