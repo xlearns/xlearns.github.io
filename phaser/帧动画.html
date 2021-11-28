@@ -82,6 +82,11 @@
         hero = this.physics.add.sprite(x, y, "格斗家1", 0);
         hero.setOrigin(direction > 0 ? 1 : 0, 0);
         hero.on("animationstart", (a, b, c) => {
+          if (direction > 0) {
+          hero.flipX = false;
+        } else {
+          hero.flipX = true;
+        }
           let { textureKey } = b;
           let index = Number(textureKey.match(/\d/g).join(""));
           let { width, height, x } = c;
@@ -97,8 +102,12 @@
           );
         });
         hero.on("animationupdate", (a, b, c) => {
+          if (direction > 0) {
+          hero.flipX = false;
+        } else {
+          hero.flipX = true;
+        }
           hero.setOrigin(direction > 0 ? 0 : 1, 0);
-
           let { textureKey } = b;
           let index = Number(textureKey.match(/\d/g).join(""));
           let { width, height, x } = c;
@@ -112,11 +121,7 @@
             c.frame.y
           );
         });
-        if (direction > 0) {
-          hero.flipX = false;
-        } else {
-          hero.flipX = true;
-        }
+        
         hero.anims.play("walk");
       }
       function update() {}
