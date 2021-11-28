@@ -18,7 +18,6 @@
       let weapon_offset = {};
     </script>
     <script src="./../pixijs/assets/格斗家/_.js"></script>
-    <script src="./../pixijs/assets/鬼剑士/_.js"></script>
     <script src="./../pixijs/assets/武器/手套/_.js"></script>
     <script src="./js/phaser.min.js"></script>
   </head>
@@ -54,6 +53,7 @@
       let y = 300;
       //角色状态
       let state = "idle";
+      let boss_state = "idle";
       //方向
       let direction = {
         face: 1,
@@ -62,7 +62,7 @@
         face: -1,
       };
       //攻击速度
-      let speed = 30;
+      let speed = 15;
       function preload() {
         for (let i = 1; i <= m_offset["格斗家"].length; i++) {
           this.load.image(`格斗家${i}`, "./../pixijs/assets/格斗家/" + i + ".png");
@@ -84,9 +84,8 @@
       let attack3_wq = [];
       let attack4_wq = [];
       let idle_wq = [];
-
-      let gjs_idle = [];
-      let gjs_hurt = [];
+      let hurt = [];
+      let hurt_wq = [];
 
       //格斗家
       for (let i = 137; i <= 144; i++) {
@@ -113,6 +112,11 @@
         idle.push({ key: `格斗家${i}` });
         idle_wq.push({ key: `格斗家_武器_手套${i}` });
       }
+      for (let i = 77; i <= 79; i++) {
+        hurt.push({ key: `格斗家${i}` });
+        hurt_wq.push({ key: `格斗家${i}` });
+      }
+
       function create() {
         this.anims.create({
           key: "walk",
@@ -146,6 +150,11 @@
           frames: attack4,
           frameRate: speed,
         });
+        this.anims.create({
+          key: "hurt",
+          frames: hurt,
+          frameRate: 5,
+        });
 
         this.anims.create({
           key: "walk_wq",
@@ -177,6 +186,11 @@
           frames: attack4_wq,
           frameRate: speed,
         });
+        this.anims.create({
+          key: "hurt_wq",
+          frames: hurt_wq,
+          frameRate: 5,
+        });
 
         hero = this.physics.add.sprite(x, y);
         herowq = this.physics.add.sprite(x, y);
@@ -199,12 +213,24 @@
             }
           }
         });
-        boss.anims.play("idle", true);
+
         cursors = this.input.keyboard.createCursorKeys();
         keyX = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.X);
       }
-
+      function hurtfn() {
+        let random = Math.floor(Math.random() * 2);
+        if (["attack1", "attack2", "attack3", "attack4"].indexOf(state) == -1)
+          return;
+        boss_direction.face = direction.face;
+        if (random === 0) {
+          boss_state = "hurt";
+        } else {
+          boss_state = "hurt";
+        }
+      }
       function update() {
+        this.physics.world.collide(herowq, boss, hurtfn);
+        boss.anims.play(boss_state, true);
         if (cursors.left.isDown) {
           direction.face = -1;
           state = "walk";
