@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>test</title>
+    <style>
+      canvas,
+      body,
+      html {
+        margin: 0;
+        padding: 0;
+      }
+    </style>
+    <script>
+      let m_offset = {};
+      let weapon_offset = {};
+    </script>
+    <script src="./../pixijs/assets/格斗家/r.js"></script>
+    <script src="./../pixijs/assets/武器/手套/r.js"></script>
+    <script src="./js/phaser.min.js"></script>
+  </head>
+  <body>
+    <script>
+      let w = 800 * window.devicePixelRatio
+      let h = 600 * window.devicePixelRatio
+      //中心点
+      let m_center = { x: -255, y: -380 };
+      let config = {
+        type: Phaser.AUTO,
+        width: w,
+        height: h,
+        antialias: false,
+        physics: {
+          default: "arcade",
+          arcade: {
+            debug: true,
+          },
+        },
+        scene: {
+          preload: preload,
+          create: create,
+          update: update,
+        },
+      };
+      let game = new Phaser.Game(config);
+      let hero = null;
+      let herowq = null;
+      let gjs = null;
+      let timer = null;
+      let combo = 0;
+      let heroConfig = {
+        scalc:1,
+        x:400,
+        y:300,
+        speed:10,
+        moveSpeed:250,
+      }
+      let bossConfig = {
+        scalc:2,
+        x:600,
+        y:300,
+        speed:10
+      }
+      //角色状态
+      let state = "idle";
+      let boss_state = "idle";
+      //方向
+      let direction = {
+        face: 1,
+      };
+      let boss_direction = {
+        face: -1,
+      };
+      function preload() {
+        var progress = this.add.graphics()
+        this.load.on('progress', function (value) {
+          progress.clear()
+          progress.fillStyle(0x00ff0b, 1)
+          progress.fillRect(0, 270, w * value, 60)
+        })
+
+        //完成
+        this.load.on('complete', function () {
+          console.log('ok')
+          progress.destroy()
+        })
+
+        for (let i = 1; i <= m_offset["格斗家"].length; i++) {
+          this.load.image(`格斗家${i}`, "./../pixijs/assets/格斗家/" + i + ".png");
+          this.load.image(
+            `格斗家_武器_手套${i}`,
+            "./../pixijs/assets/武器/手套/" + i + ".png"
+          );
+        }
+      }
+      let walk = [];
+      let attack1 = [];
+      let attack2 = [];
+      let attack3 = [];
+      let attack4 = [];
+      let idle = [];
+      let walk_wq = [];
+      let attack1_wq = [];
+      let attack2_wq = [];
+      let attack3_wq = [];
+      let attack4_wq = [];
+      let idle_wq = [];
+      let hurt = [];
+      let hurt_wq = [];
+
+      //格斗家
+      for (let i = 137; i <= 144; i++) {
+        walk.push({ key: `格斗家${i}` });
+        walk_wq.push({ key: `格斗家_武器_手套${i}` });
+      }
+      for (let i = 6; i <= 7; i++) {
+        attack1.push({ key: `格斗家${i}` });
+        attack1_wq.push({ key: `格斗家_武器_手套${i}` });
+      }
+      for (let i = 11; i <= 17; i++) {
+        attack2.push({ key: `格斗家${i}` });
+        attack2_wq.push({ key: `格斗家_武器_手套${i}` });
+      }
+      for (let i = 22; i <= 29; i++) {
+        attack3.push({ key: `格斗家${i}` });
+        attack3_wq.push({ key: `格斗家_武器_手套${i}` });
+      }
+      for (let i = 30; i <= 36; i++) {
+        attack4.push({ key: `格斗家${i}` });
+        attack4_wq.push({ key: `格斗家_武器_手套${i}` });
+      }
+      for (let i = 114; i <= 117; i++) {
+        idle.push({ key: `格斗家${i}` });
+        idle_wq.push({ key: `格斗家_武器_手套${i}` });
+      }
+      for (let i = 77; i <= 79; i++) {
+        hurt.push({ key: `格斗家${i}` });
+        hurt_wq.push({ key: `格斗家${i}` });
+      }
+
+      function create() {
+        //fps
+        fpsText = this.add.text(10, 10, 'FPS: ', {
+          font: 'bold 26px Arial',
+          fill: '#ffffff',
+        })
+
+        createAnim.call(this,heroConfig)
+
+        hero = this.physics.add.sprite(heroConfig.x, heroConfig.y)
+        hero.name = 'body'
+        herowq = this.physics.add.sprite(heroConfig.x, heroConfig.y)
+        herowq.name = 'weapon'
+        boss = this.physics.add.sprite(bossConfig.x, bossConfig.y)
+        boss.name = 'boss'
+
+        setScale(hero,heroConfig)
+        setScale(herowq,heroConfig)
+        setScale(boss,bossConfig)
+
+        animation(hero, direction, m_offset["格斗家"], m_center,heroConfig);
+        animation(herowq, direction, weapon_offset["格斗家"], m_center,heroConfig);
+        animation(boss, boss_direction, m_offset["格斗家"], m_center,bossConfig);
+        herowq.on("animationcomplete", () => {
+          //动画完成
+          //combo
+          if (
+            state == "attack1" ||
+            state == "attack2" ||
+            state == "attack3" ||
+            state == "attack4"
+          ) {
+            if (++combo % 4 == 0) {
+              combo = 0;
+            }
+          }
+        });
+       
+        cursors = this.input.keyboard.createCursorKeys();
+        keyX = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.X);
+      }
+      function hurtfn() {
+        let random = Math.floor(Math.random() * 2);
+        if (["attack1", "attack2", "attack3", "attack4"].indexOf(state) == -1)
+          return;
+        boss_direction.face = -direction.face;
+        if (random === 0) {
+          boss_state = "hurt";
+        } else {
+          boss_state = "hurt";
+        }
+      }
+      function update(time, delta) {
+        //fps
+        fpsText.setText('FPS: ' + (1000 / delta).toFixed())
+        //碰撞检测
+        this.physics.world.collide(herowq,boss, hurtfn);
+        //
+        boss.anims.play(boss_state, true);
+        if (cursors.left.isDown) {
+          direction.face = -1;
+          state = "walk";
+          hero.setVelocityX(-heroConfig.moveSpeed);
+          herowq.setVelocityX(-heroConfig.moveSpeed);
+          hero.anims.play("walk", true);
+          herowq.anims.play("walk_wq", true);
+        } else if (cursors.right.isDown) {
+          direction.face = 1;
+          state = "walk";
+          hero.setVelocityX(heroConfig.moveSpeed);
+          herowq.setVelocityX(heroConfig.moveSpeed);
+          hero.anims.play("walk", true);
+          herowq.anims.play("walk_wq", true);
+        } else if (keyX.isDown) {
+          clearTimeout(timer);
+          hero.setVelocityX(0);
+          herowq.setVelocityX(0);
+          if (combo == 0) {
+            state = "attack1";
+          } else if (combo == 1) {
+            state = "attack2";
+          } else if (combo == 2) {
+            state = "attack3";
+          } else if (combo == 3) {
+            state = "attack4";
+          }
+          herowq.anims.play(state + "_wq", true);
+          hero.anims.play(state, true);
+        } else {
+          state = "idle";
+          combo = 0;
+          hero.setVelocityX(0);
+          herowq.setVelocityX(0);
+          herowq.anims.play("idle_wq", true);
+          hero.anims.play("idle", true);
+        }
+      }
+
+      //屏幕适配
+      window.addEventListener("resize", () => {
+        game.scale.resize(w, h);
+      });
+
+      function animation(obj, direction, offset, m_center,config) {
+        obj.on("animationstart", (a, b, c) => {
+          if (direction.face > 0) {
+            obj.setFlipX(false);
+          } else {
+            obj.setFlipX(true);
+          }
+          let { textureKey } = b;
+          let index = Number(textureKey.match(/\d/g).join(""));
+          let { width, height, x } = c;
+          let scalc = config&&config.scalc?config.scalc:1
+          obj.body.width = width*scalc;
+          obj.body.height = height*scalc;
+          c.frame.x = Number(offset[index - 1][0]) + m_center.x;
+          c.frame.y = Number(offset[index - 1][1]) + m_center.y;
+          obj.setOrigin(direction.face > 0 ? 0 : 1, 0);
+          obj.setOffset(direction.face * c.frame.x, c.frame.y);
+        });
+        obj.on("animationupdate", (a, b, c) => {
+          if (direction.face > 0) {
+            obj.setFlipX(false);
+          } else {
+            obj.setFlipX(true);
+          }
+          obj.setOrigin(direction.face > 0 ? 0 : 1, 0);
+          let { textureKey } = b;
+          let index = Number(textureKey.match(/\d/g).join(""));
+          let { width, height, x } = c;
+          let scalc = config&&config.scalc?config.scalc:1
+          obj.body.width = width*scalc;
+          obj.body.height = height*scalc;
+          c.frame.x = Number(offset[index - 1][0]) + m_center.x;
+          c.frame.y = Number(offset[index - 1][1]) + m_center.y;
+          obj.setOffset(direction.face * c.frame.x, c.frame.y);
+        });
+      }
+      //设置角色大小
+      function setScale(character,power){
+        power&&power.scalc&&character.setScale(power.scalc)
+      }
+      //创建动画
+      function createAnim(config){
+        let speed = config?config.speed:5
+        this.anims.create({
+          key: "walk",
+          frames: walk,
+          frameRate: 15,
+        });
+        this.anims.create({
+          key: "idle",
+          frames: idle,
+          frameRate: speed,
+          repeat: -1,
+        });
+        
+        this.anims.create({
+          key: "attack1",
+          frames: attack1,
+          frameRate: speed,
+          // frameRate: 3 * speed,
+        });
+        this.anims.create({
+          key: "attack2",
+          frames: attack2,
+          frameRate: speed,
+        });
+        this.anims.create({
+          key: "attack3",
+          frames: attack3,
+          frameRate: speed,
+        });
+        this.anims.create({
+          key: "attack4",
+          frames: attack4,
+          frameRate: speed,
+        });
+        this.anims.create({
+          key: "hurt",
+          frames: hurt,
+          frameRate: 5,
+        });
+
+        this.anims.create({
+          key: "walk_wq",
+          frames: walk_wq,
+          frameRate: 15,
+        });
+        this.anims.create({
+          key: "idle_wq",
+          frames: idle_wq,
+          frameRate: speed,
+        });
+        this.anims.create({
+          key: "attack1_wq",
+          frames: attack1_wq,
+          frameRate: speed,
+        });
+        this.anims.create({
+          key: "attack2_wq",
+          frames: attack2_wq,
+          frameRate: speed,
+        });
+        this.anims.create({
+          key: "attack3_wq",
+          frames: attack3_wq,
+          frameRate: speed,
+        });
+        this.anims.create({
+          key: "attack4_wq",
+          frames: attack4_wq,
+          frameRate: speed,
+        });
+        this.anims.create({
+          key: "hurt_wq",
+          frames: hurt_wq,
+          frameRate: 5,
+        });
+      }
+    </script>
+  </body>
+</html>
