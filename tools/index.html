@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/element-plus@latest/dist/index.css"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/vue@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/element-plus@latest"></script>
+    <style>
+      .grid {
+        display: grid;
+        gap: 10px;
+        grid-template-columns: 6fr 4fr;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <div class="grid">
+        <el-input v-model="msg"></el-input>
+        <div class="">
+          <el-button @click="search" type="primary">search</el-button>
+          <el-button @click="cdn">cdn</el-button>
+        </div>
+      </div>
+      <div>
+        <div class="item" v-for="item in cdn_str" :key="item">
+          {{item.name}}
+          <pre v-if='item.name!="ESM"'>
+                  &lt;script&gt; src="{{item.src}}{{msg}}">&lt;/script&gt;
+               </pre
+          >
+          <pre v-else>
+                 &lt;script type="module"&gt;
+                   import lodash from 'https://cdn.skypack.dev/{{msg}}';
+                 &lt;/script&gt;
+               </pre
+          >
+        </div>
+      </div>
+    </div>
+  </body>
+  <script>
+    let { ref, createApp } = Vue;
+    let app = createApp({
+      setup() {
+        const msg = ref("vue");
+        const cdn_str = ref("");
+        function search() {
+          window.open(`https://www.npmjs.com/package/${msg.value}`, "C");
+          window.open(`https://snyk.io/advisor/npm-package/${msg.value}`, "B");
+          window.open(`https://cdn.jsdelivr.net/npm/${msg.value}@latest/`, "A");
+        }
+
+        function cdn() {
+          cdn_str.value = [
+            { name: "jsdelivr", src: "https://cdn.jsdelivr.net/npm/" },
+            { name: "Unpkg ", src: "https://unpkg.com/" },
+            { name: "ESM", src: "https://cdn.skypack.dev/" },
+          ];
+        }
+        return {
+          msg,
+          cdn_str,
+          search,
+          cdn,
+        };
+      },
+    });
+    app.use(ElementPlus);
+    app.mount("#app");
+  </script>
+</html>
